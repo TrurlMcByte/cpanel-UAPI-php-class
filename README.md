@@ -15,10 +15,10 @@ See the example files, but typical useage takes the form of:
 $cpapi = new \cpanelAPI('user', 'password', 'cpanel.example.com');
 //Set the scope to the module we want to use. in this case, DomainInfo
 // and call the function we want like this.
-$report[] = $cpapi->scope('DomainInfo')->list_domains();
+$report[] = $cpapi->DomainInfo->list_domains();
 
 // 'regex' not available in UAPI, so switch to API2
 // Any arguments are passed into the function as an array, in the form of param => value.
-$report[] = $cpapi->setApi('api2')->scope('AddonDomain')->listaddondomains(array('regex' => preg_quote('www.example.com')));
+$report[] = $cpapi->API2->AddonDomain->listaddondomains(array('regex' => preg_quote('www.example.com')));
 print_r($report);
 ```

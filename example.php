@@ -14,7 +14,6 @@
 spl_autoload_register();
 
 $cpapi = new cpanelAPI('cPuser', 'cPpass', 'cPanel.example.com'); //instantiate the object, used UAPI by default
-
 $database = 'database';
 $databaseuser = 'databaseuser';
 $databasepass = 'databasepass';
@@ -41,8 +40,7 @@ print_r($ret);
 //user for a database.
 //add the user, set all privileges - add specific privileges by comma separation. e.g. 'DELETE,UPDATE,CREATE,ALTER'
 $cpapi->set_privileges_on_database(array('user' => $databaseuser, 'database' => $database, 'privileges' => 'ALL'));
-
 //fast call example:
-$report = $cpapi->setApi('api2')->scope('AddonDomain')->listaddondomains();
+$report = $cpapi->API2->AddonDomain->listaddondomains();
 
 print_r($report);

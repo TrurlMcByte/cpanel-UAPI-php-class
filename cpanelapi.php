@@ -93,6 +93,21 @@ class cpanelapi
       return $this;
   }
 
+    /**
+     * bit crazy.
+     */
+    public function __get($name)
+    {
+        if ($name === 'API2') {
+            return $this->setApi('api2');
+        }
+        if ($name === 'UAPI') {
+            return $this->setApi('api2');
+        }
+
+        return new cpanelapimethod($this, $name);
+    }
+
   /**
    * Magic __call method, will translate all function calls to object to API requests.
    *
@@ -296,4 +311,25 @@ class cpanelapi
 
       return curl_exec($ch);
   }
+}
+
+/**
+ * Pseudo API class.
+ */
+class cpanelapimethod
+{
+    public $base = null;
+    public $name = '';
+
+    public function __construct(cpanelapi &$base, $name)
+    {
+        $this->base = &$base;
+        $this->name = $name;
+    }
+    public function __call($name, $arguments)
+    {
+        $this->base->scope($this->name);
+
+        return call_user_func_array(array($this->base, $name), $arguments);
+    }
 }
