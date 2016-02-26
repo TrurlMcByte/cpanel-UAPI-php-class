@@ -19,6 +19,15 @@ $report[] = $cpapi->DomainInfo->list_domains();
 
 // 'regex' not available in UAPI, so switch to API2
 // Any arguments are passed into the function as an array, in the form of param => value.
-$report[] = $cpapi->API2->AddonDomain->listaddondomains(array('regex' => preg_quote('www.example.com')));
+$report[] = $cpapi->API2->AddonDomain->listaddondomains(array('regex' => preg_quote('www.example1.com')));
+// now API already switched, so next query
+$report[] = $cpapi->AddonDomain->listaddondomains(array('regex' => preg_quote('www.example2.com')));
+
+// really scope also already set...
+$report[] = $cpapi->listaddondomains(array('regex' => preg_quote('www.example3.com')));
+// ??? magic call 'same'
+$report[] = $cpapi->same(array('regex' => preg_quote('www.example4.com')));
+// STOP IT!
+
 print_r($report);
 ```

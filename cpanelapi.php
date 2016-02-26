@@ -320,6 +320,7 @@ class cpanelapimethod
 {
     public $base = null;
     public $name = '';
+    public $mname = '';
 
     public function __construct(cpanelapi &$base, $name)
     {
@@ -329,7 +330,10 @@ class cpanelapimethod
     public function __call($name, $arguments)
     {
         $this->base->scope($this->name);
+        if ($name !== 'same') {
+            $this->mname = $name;
+        }
 
-        return call_user_func_array(array($this->base, $name), $arguments);
+        return call_user_func_array(array($this->base, $this->mname), $arguments);
     }
 }
