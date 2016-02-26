@@ -45,8 +45,8 @@ class cpanelapi
     private $secret;
     private $type;
     private $session;
-    private $method;
-    public  $mname;
+    private $apipath;
+    public $mname;
     private $requestUrl;
     private $last_answer;
 
@@ -89,7 +89,7 @@ class cpanelapi
   public function setApi($api)
   {
       $this->api = $api;
-      $this->setMethod();
+      $this->setapipath();
 
       return $this;
   }
@@ -109,49 +109,40 @@ class cpanelapi
         return new cpanelapimethod($this, $name);
     }
 
-  /**
-   * Magic __call method, will translate all function calls to object to API requests.
-   *
-   * @param $name - name of the function
-   * @param $arguments - an array of arguments
-   *
-   * @return array report array
-   *
-   * @throws Exception
-   */
-  public function __call($name, $arguments)
-  {
-      if (method_exists($this, $name)) {
-          return call_user_func_array(array($this, $name), $arguments);
-      }
-      if ($name === 'same' && !empty($this->mname)) {
-          $name = $this->mname;
-      } else {
-          $this->mname = $name;
-      }
-      if (count($arguments) < 1 || !is_array($arguments[0])) {
-          $arguments[0] = (count($arguments) > 0 && is_object($arguments[0])) ? ((array) $arguments[0]) : array();
-      }
-      $this->last_query = (object) array('error' => null, 'api' => $this->api, 'scope' => $this->scope, 'method' => $name, 'args' => $arguments[0], 'reply' => null);
-      $this->last_query->reply = $this->APIcall($name, $arguments[0]);
-      if ($this->last_query->reply['errno'] === 0) {
-          $this->last_answer = json_decode($this->last_query->reply['content']);
-          if (json_last_error() !== JSON_ERROR_NONE) {
-              $this->last_query->error = 'JSON ERROR: '.$this->last_query->json_error;
-          } else {
-              unset($this->last_query->reply);
-          }
-      } else {
-          $this->last_query->error = $this->last_query->reply['errmsg'];
-      }
-      if (is_object($this->last_answer)) {
-          $this->last_answer->__query = $this->last_query;
-      } else {
-          return (object) array('__query' => $this->last_query);
-      }
+    public function __invoke()
+    {
+        if (!empty($this->apipath) && !empty($this->scope) && !empty($this->mname) && func_num_args() > 0) {
+            return $this->APIcall($this->mname, func_get_arg(0));
+        }
 
-      return $this->last_answer;
-  }
+        return;
+    }
+    /**
+     * Magic __call method, will translate all function calls to object to API requests.
+     *
+     * @param $name - name of the function
+     * @param $arguments - an array of arguments
+     *
+     * @return array report array
+     *
+     * @throws Exception
+     */
+    public function __call($name, $arguments)
+    {
+        if (method_exists($this, $name)) {
+            return call_user_func_array(array($this, $name), $arguments);
+        }
+        if ($name === 'same' && !empty($this->mname)) {
+            $name = $this->mname;
+        } else {
+            $this->mname = $name;
+        }
+        if (count($arguments) < 1 || !is_array($arguments[0])) {
+            $arguments[0] = (count($arguments) > 0 && is_object($arguments[0])) ? ((array) $arguments[0]) : array();
+        }
+
+        return $this->APIcall($name, $arguments[0]);
+    }
 
     public function getLastRequest()
     {
@@ -171,14 +162,14 @@ class cpanelapi
 
       return $this;
   }
-    protected function setMethod()
+    protected function setapipath()
     {
         switch ($this->api) {
       case 'uapi' :
-        $this->method = '/execute/';
+        $this->apipath = '/execute/';
             break;
       case 'api2':
-        $this->method = '/json-api/cpanel/';
+        $this->apipath = '/json-api/cpanel/';
             break;
       default:
             throw new Exception('$this->api is not set or is incorrectly set. The only available options are \'uapi\' or \'api2\'');
@@ -197,7 +188,7 @@ class cpanelapi
   {
       $this->auth = base64_encode($this->user.':'.$this->pass);
       $this->type = $this->ssl == 1 ? 'https://' : 'http://';
-      $this->requestUrl = $this->type.$this->server.':'.$this->port.$this->method;
+      $this->requestUrl = $this->type.$this->server.':'.$this->port.$this->apipath;
       switch ($this->api) {
         case 'uapi':
             $this->requestUrl .= ($this->scope != '' ? $this->scope.'/' : '').$name.'?';
@@ -215,7 +206,27 @@ class cpanelapi
           $this->requestUrl .= $key.'='.$value.'&';
       }
 
-      return $this->curl_request($this->requestUrl);
+      $this->last_query = (object) array('error' => null, 'api' => $this->api, 'scope' => $this->scope, 'method' => $name, 'args' => $arguments, 'reply' => null);
+
+      $this->last_query->reply = $this->curl_request($this->requestUrl);
+
+      if ($this->last_query->reply['errno'] === 0) {
+          $this->last_answer = json_decode($this->last_query->reply['content']);
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              $this->last_query->error = 'JSON ERROR: '.$this->last_query->json_error;
+          } else {
+              unset($this->last_query->reply);
+          }
+      } else {
+          $this->last_query->error = $this->last_query->reply['errmsg'];
+      }
+      if (is_object($this->last_answer)) {
+          $this->last_answer->__query = $this->last_query;
+      } else {
+          return (object) array('__query' => $this->last_query);
+      }
+
+      return $this->last_answer;
   }
 
   /**
@@ -343,6 +354,7 @@ class cpanelapimethod
             $this->mname = $this->base->mname;
         }
         assert(!empty($this->mname));
+
         return call_user_func_array(array($this->base, $this->mname), $arguments);
     }
 }

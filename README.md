@@ -30,6 +30,7 @@ $report[] = $cpapi->listaddondomains(array('regex' => preg_quote('www.example3.c
 // ??? magic call 'same' with short array syntax
 $report[] = $cpapi->same(['regex' => preg_quote('www.example4.com')]);
 // STOP IT!
+$report[] = $cpapi(['regex' => preg_quote('www.example4.com')]);
 
 print_r($report);
 ```
