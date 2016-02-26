@@ -101,8 +101,8 @@ class cpanelapi
         if ($name === 'API2') {
             return $this->setApi('api2');
         }
-        if ($name === 'UAPI') {
-            return $this->setApi('api2');
+        if ($name === 'UAPI' || $name === 'UAPI2') {
+            return $this->setApi('uapi');
         }
 
         return new cpanelapimethod($this, $name);
