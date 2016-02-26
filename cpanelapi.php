@@ -46,6 +46,7 @@ class cpanelapi
     private $type;
     private $session;
     private $method;
+    public  $mname;
     private $requestUrl;
     private $last_answer;
 
@@ -123,7 +124,11 @@ class cpanelapi
       if (method_exists($this, $name)) {
           return call_user_func_array(array($this, $name), $arguments);
       }
-
+      if ($name === 'same' && !empty($this->mname)) {
+          $name = $this->mname;
+      } else {
+          $this->mname = $name;
+      }
       if (count($arguments) < 1 || !is_array($arguments[0])) {
           $arguments[0] = (count($arguments) > 0 && is_object($arguments[0])) ? ((array) $arguments[0]) : array();
       }
@@ -332,8 +337,12 @@ class cpanelapimethod
         $this->base->scope($this->name);
         if ($name !== 'same') {
             $this->mname = $name;
+            $this->base->mname = $this->mname;
         }
-
+        if (empty($this->mname) && !(empty($this->base->mname))) {
+            $this->mname = $this->base->mname;
+        }
+        assert(!empty($this->mname));
         return call_user_func_array(array($this->base, $this->mname), $arguments);
     }
 }
