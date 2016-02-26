@@ -11,7 +11,8 @@
  *
  * @link https://github.com/N1ghteyes/cpanel-UAPI-php-class
  */
-include '../cpanelapi.php'; //include the class file
+spl_autoload_register();
+
 $cpapi = new cpanelAPI('cPuser', 'cPpass', 'cPanel.example.com'); //instantiate the object, used UAPI by default
 
 $database = 'database';
@@ -33,14 +34,15 @@ $cpapi->scope('Mysql'); // set the scope to the module we want to use. NOTE: thi
 //the array key as the parameter e.g. array('name' => 'database').
 
 $cpapi->create_database(array('name' => $database)); //Create the database
-$cpapi->create_user(array('name' => $databaseuser, 'password' => $databasepass)); //create a user for the new database
+$ret = $cpapi->create_user(array('name' => $databaseuser, 'password' => $databasepass)); //create a user for the new database
+print_r($ret);
 
 //After you create the user, you must use the set_privileges_on_database function call to grant access to the
 //user for a database.
 //add the user, set all privileges - add specific privileges by comma separation. e.g. 'DELETE,UPDATE,CREATE,ALTER'
 $cpapi->set_privileges_on_database(array('user' => $databaseuser, 'database' => $database, 'privileges' => 'ALL'));
 
-
 //fast call example:
-$cpapi->setApi('api2')->scope('AddonDomain')->listaddondomains();
+$report = $cpapi->setApi('api2')->scope('AddonDomain')->listaddondomains();
 
+print_r($report);

@@ -29,7 +29,7 @@
 /**
  * Class cPanelAPI.
  */
-class cpanelAPI
+class cpanelapi
 {
     public $version = '1.1';
     public $server;
@@ -48,7 +48,6 @@ class cpanelAPI
     private $method;
     private $requestUrl;
     private $last_answer;
-    private $last_parse_error;
 
     /**
      * we emulate a browser here since some websites detect
@@ -111,11 +110,20 @@ class cpanelAPI
       }
 
       if (count($arguments) < 1 || !is_array($arguments[0])) {
-          $arguments[0] = array();
+          $arguments[0] = (count($arguments) > 0 && is_object($arguments[0])) ? ((array) $arguments[0]) : array();
       }
-      $this->last_query = (object) array('api' => $this->api, 'scope' => $this->scope, 'method' => $name, 'args' => $arguments[0]);
-      $this->last_answer = json_decode($this->APIcall($name, $arguments[0]));
-      $this->last_query->parse_error = json_last_error();
+      $this->last_query = (object) array('error' => null, 'api' => $this->api, 'scope' => $this->scope, 'method' => $name, 'args' => $arguments[0], 'reply' => null);
+      $this->last_query->reply = $this->APIcall($name, $arguments[0]);
+      if ($this->last_query->reply['errno'] === 0) {
+          $this->last_answer = json_decode($this->last_query->reply['content']);
+          if (json_last_error() !== JSON_ERROR_NONE) {
+              $this->last_query->error = 'JSON ERROR: '.$this->last_query->json_error;
+          } else {
+              unset($this->last_query->reply);
+          }
+      } else {
+          $this->last_query->error = $this->last_query->reply['errmsg'];
+      }
       if (is_object($this->last_answer)) {
           $this->last_answer->__query = $this->last_query;
       } else {
@@ -146,7 +154,7 @@ class cpanelAPI
     protected function setMethod()
     {
         switch ($this->api) {
-      case 'uapi':
+      case 'uapi' :
         $this->method = '/execute/';
             break;
       case 'api2':
@@ -217,7 +225,7 @@ class cpanelAPI
       $header['errmsg'] = $errmsg;
       $header['content'] = $content;
 
-      return $header['content'];
+      return $header;
   }
 
   /**
