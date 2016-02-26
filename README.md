@@ -10,7 +10,7 @@ v1.1 should be backwards compatible.
 See the example files, but typical useage takes the form of:
 
 ###Mixed mode
-```
+```PHP
 //use UAPI2 by default
 $cpapi = new \cpanelAPI('user', 'password', 'cpanel.example.com');
 //Set the scope to the module we want to use. in this case, DomainInfo
