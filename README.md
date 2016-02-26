@@ -9,36 +9,16 @@ v1.1 should be backwards compatible.
 
 See the example files, but typical useage takes the form of:
 
-###UAPI
-```
-//load UAPI2 class
-$cpuapi = new cpanelAPI('user', 'password', 'cpanel.example.com');
-
-//Set the scope to the module we want to use. in this case, Mysql
-//and call the function we want like this. Any arguments are passed into the function as an array, in the form of param => value.
-$response = $cpuapi->scope('Mysql')->get_restrictions();
-print_r($response);
-```
-
-###API2
-```
-//load API2 class
-$cpapi2 = new cpanelAPI('user', 'password', 'cpanel.example.com', 'api2');
-
-//Set the scope to the module we want to use. in this case, SubDomain
-//and call the function we want like this. Any arguments are passed into the function as an array, in the form of param => value.
-$response = $cpapi2->scope('SubDomain')->addsubdomain(array('rootdomain' => ''domain.com, 'domain' => 'sub'));
-print_r($response);
-```
-
 ###Mixed mode
 ```
-//load UAPI2 class
+//use UAPI2 by default
 $cpapi = new \cpanelAPI('user', 'password', 'cpanel.example.com');
-// use UAPI by default
-$report[] = $cpapi->scope('DomainInfo')->list_domains(); 
+//Set the scope to the module we want to use. in this case, DomainInfo
+// and call the function we want like this.
+$report[] = $cpapi->scope('DomainInfo')->list_domains();
 
 // 'regex' not available in UAPI, so switch to API2
+// Any arguments are passed into the function as an array, in the form of param => value.
 $report[] = $cpapi->setApi('api2')->scope('AddonDomain')->listaddondomains(array('regex' => preg_quote('www.example.com')));
 print_r($report);
 ```
