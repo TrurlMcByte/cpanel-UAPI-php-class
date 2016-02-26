@@ -46,7 +46,7 @@ class cpanelapi
     private $type;
     private $session;
     private $apipath;
-    public $mname;
+    public $method;
     private $requestUrl;
     private $last_answer;
 
@@ -89,7 +89,7 @@ class cpanelapi
   public function setApi($api)
   {
       $this->api = $api;
-      $this->setapipath();
+      $this->setApiPath();
 
       return $this;
   }
@@ -105,17 +105,18 @@ class cpanelapi
         if ($name === 'UAPI' || $name === 'UAPI2') {
             return $this->setApi('uapi');
         }
+        $this->scope($name);
 
         return new cpanelapimethod($this, $name);
     }
 
     public function __invoke()
     {
-        if (!empty($this->apipath) && !empty($this->scope) && !empty($this->mname) && func_num_args() > 0) {
-            return $this->APIcall($this->mname, func_get_arg(0));
+        if (!empty($this->apipath) && !empty($this->scope) && !empty($this->method) && func_num_args() > 0) {
+            return $this->APIcall($this->method, func_get_arg(0));
         }
 
-        return;
+        return $this;
     }
     /**
      * Magic __call method, will translate all function calls to object to API requests.
@@ -132,10 +133,10 @@ class cpanelapi
         if (method_exists($this, $name)) {
             return call_user_func_array(array($this, $name), $arguments);
         }
-        if ($name === 'same' && !empty($this->mname)) {
-            $name = $this->mname;
+        if ($name === 'same' && !empty($this->method)) {
+            $name = $this->method;
         } else {
-            $this->mname = $name;
+            $this->method = $name;
         }
         if (count($arguments) < 1 || !is_array($arguments[0])) {
             $arguments[0] = (count($arguments) > 0 && is_object($arguments[0])) ? ((array) $arguments[0]) : array();
@@ -149,20 +150,21 @@ class cpanelapi
         return $this->requestUrl;
     }
 
-  /**
-   * set the scope to the module we want to use. NOTE: this IS case sensitive.
-   *
-   * @param $scope 
-   *
-   * @return cpanelAPI $this self object
-   */
-  public function scope($scope)
-  {
-      $this->scope = $scope;
+   /**
+    * set the scope to the module we want to use. NOTE: this IS case sensitive.
+    *
+    * @param $scope 
+    *
+    * @return cpanelAPI $this self object
+    */
+   public function scope($scope)
+   {
+       $this->scope = $scope;
 
-      return $this;
-  }
-    protected function setapipath()
+       return $this;
+   }
+
+    private function setApiPath()
     {
         switch ($this->api) {
       case 'uapi' :
@@ -184,7 +186,7 @@ class cpanelapi
    *
    * @throws Exception
    */
-  protected function APIcall($name, $arguments)
+  private function APIcall($name, $arguments)
   {
       $this->auth = base64_encode($this->user.':'.$this->pass);
       $this->type = $this->ssl == 1 ? 'https://' : 'http://';
@@ -234,7 +236,7 @@ class cpanelapi
    *
    * @return bool|mixed
    */
-  protected function curl_request($url)
+  private function curl_request($url)
   {
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
@@ -265,7 +267,7 @@ class cpanelapi
    *
    * @return bool|mixed
    */
-  protected function curl_exec_follow($ch, &$maxredirect = null)
+  private function curl_exec_follow($ch, &$maxredirect = null)
   {
       curl_setopt($ch, CURLOPT_USERAGENT, $this->user_agent);
 
@@ -335,26 +337,36 @@ class cpanelapi
 class cpanelapimethod
 {
     public $base = null;
-    public $name = '';
-    public $mname = '';
+    public $scope = '';
+    public $method = '';
 
-    public function __construct(cpanelapi &$base, $name)
+    public function __construct(cpanelapi &$base, $scope)
     {
         $this->base = &$base;
-        $this->name = $name;
-    }
-    public function __call($name, $arguments)
-    {
-        $this->base->scope($this->name);
-        if ($name !== 'same') {
-            $this->mname = $name;
-            $this->base->mname = $this->mname;
-        }
-        if (empty($this->mname) && !(empty($this->base->mname))) {
-            $this->mname = $this->base->mname;
-        }
-        assert(!empty($this->mname));
+        $this->scope = $scope;
 
-        return call_user_func_array(array($this->base, $this->mname), $arguments);
+        return $this;
+    }
+    public function __get($method)
+    {
+        $this->base->scope($this->scope);
+        $this->method = $method;
+        $this->base->method = $this->method;
+
+        return $this;
+    }
+    public function __call($method, $arguments)
+    {
+        $this->base->scope($this->scope);
+        if ($method !== 'same') {
+            $this->method = $method;
+            $this->base->method = $this->method;
+        }
+        if (empty($this->method) && !(empty($this->base->method))) {
+            $this->method = $this->base->method;
+        }
+        assert(!empty($this->method));
+
+        return call_user_func_array(array($this->base, $this->method), $arguments);
     }
 }

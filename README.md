@@ -34,3 +34,11 @@ $report[] = $cpapi(['regex' => preg_quote('www.example4.com')]);
 
 print_r($report);
 ```
+
+Also you may use bit crazy way to set current api/scope/method like
+`$cpapi->API2->AddonDomain->listaddondomains;`
+
+
+###ToDo
+
+Improve output structure
