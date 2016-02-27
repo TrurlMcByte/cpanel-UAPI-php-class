@@ -124,9 +124,9 @@ class cpanelapi
      * @param $name - name of the function
      * @param $arguments - an array of arguments
      *
+     * @throws Exception
      * @return array report array
      *
-     * @throws Exception
      */
     public function __call($name, $arguments)
     {
@@ -182,9 +182,9 @@ class cpanelapi
    * @param $name
    * @param $arguments
    *
+   * @throws Exception
    * @return bool|mixed
    *
-   * @throws Exception
    */
   private function APIcall($name, $arguments)
   {
